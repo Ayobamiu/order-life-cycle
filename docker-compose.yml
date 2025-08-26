@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: temporal
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: temporal
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    networks:
+      - temporal-network
+
+  temporal:
+    image: temporalio/auto-setup:1.22.3
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: temporal
+      POSTGRES_SEEDS: postgres
+    ports:
+      - "7233:7233"
+    depends_on:
+      - postgres
+    networks:
+      - temporal-network
+
+volumes:
+  postgres_data:
+
+networks:
+  temporal-network:
+    driver: bridge
