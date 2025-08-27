@@ -3,7 +3,6 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 from order_workflow import OrderWorkflow
 from activities import (
-    create_order_activity,
     validate_order_activity,
     charge_payment_activity,
     receive_order_activity,
@@ -18,7 +17,6 @@ async def main():
         task_queue="my-task-queue",
         workflows=[OrderWorkflow],
         activities=[
-            create_order_activity,
             validate_order_activity,
             charge_payment_activity,
             receive_order_activity,

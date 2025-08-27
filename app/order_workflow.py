@@ -46,7 +46,7 @@ class OrderWorkflow:
             print(f"Step 4: Charging payment {payment_id} for {order_id}")
             payment_result = await workflow.execute_activity(
                 charge_payment_activity,
-                args=[order_data, payment_id],
+                args=[order_id, payment_id],
                 start_to_close_timeout=timedelta(seconds=5),
                 retry_policy=RetryPolicy(maximum_attempts=3),
             )
@@ -55,7 +55,7 @@ class OrderWorkflow:
             print(f"Step 5: Starting shipping workflow for {order_id}")
             shipping_result = await workflow.execute_activity(
                 start_shipping_activity,
-                order_data,
+                order_id,
                 start_to_close_timeout=timedelta(seconds=5),
                 retry_policy=RetryPolicy(maximum_attempts=2),
             )
