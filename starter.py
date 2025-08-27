@@ -6,11 +6,12 @@ from temporalio.client import Client
 async def main():
     client = await Client.connect("localhost:7233")
     order_id = f"order-{uuid.uuid4()}"
+    payment_id = f"order-{uuid.uuid4()}"
     print(f"🎯 Starting workflow for order: {order_id}")
 
     result = await client.execute_workflow(
         "OrderWorkflow",
-        order_id,
+        args=[order_id, payment_id],
         id=f"workflow-{order_id}",
         task_queue="my-task-queue",
     )

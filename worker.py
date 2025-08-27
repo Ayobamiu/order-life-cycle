@@ -1,8 +1,14 @@
 import asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
-from simple_workflow import OrderWorkflow
-from activities import create_order_activity, validate_order_activity
+from order_workflow import OrderWorkflow
+from activities import (
+    create_order_activity,
+    validate_order_activity,
+    charge_payment_activity,
+    receive_order_activity,
+    start_shipping_activity,
+)
 
 
 async def main():
@@ -11,7 +17,13 @@ async def main():
         client,
         task_queue="my-task-queue",
         workflows=[OrderWorkflow],
-        activities=[create_order_activity, validate_order_activity],
+        activities=[
+            create_order_activity,
+            validate_order_activity,
+            charge_payment_activity,
+            receive_order_activity,
+            start_shipping_activity,
+        ],
     )
     print("🚀 Worker started with workflows AND activities!")
     print("Press Ctrl+C to stop the worker")
