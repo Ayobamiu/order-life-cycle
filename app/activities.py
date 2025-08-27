@@ -1,7 +1,13 @@
-import uuid
 from temporalio import activity
 from database import get_db
-from models import Order, Payment, Event
+from models import Order, Payment
+
+from function_stubs import (
+    order_received,
+    order_validated,
+    payment_charged,
+    order_shipped,
+)
 
 
 @activity.defn
@@ -13,25 +19,7 @@ async def validate_order_activity(order_data: dict) -> bool:
 
     try:
         # Update order status
-        order = db.query(Order).filter(Order.id == order_data["order_id"]).first()
-        if order:
-            order.status = "validated"
-            db.commit()
-
-            # Log event
-            event = Event(
-                order_id=order_data["order_id"],
-                event_type="order_validated",
-                event_data={"status": "validated"},
-            )
-            db.add(event)
-            db.commit()
-
-            print(f"✅ Order {order_data['order_id']} validated in database")
-            return True
-        else:
-            print(f"❌ Order {order_data['order_id']} not found in database")
-            return False
+        return await order_validated(order_data["order_id"], db)
 
     except Exception as e:
         db.rollback()
@@ -43,7 +31,7 @@ async def validate_order_activity(order_data: dict) -> bool:
 
 @activity.defn
 async def receive_order_activity(order_id: str) -> dict:
-    """Create a new order in the database"""
+    """Create a new order in the database with idempotency"""
     print(f"📦 Receiving order {order_id}")
 
     db = next(get_db())
@@ -59,30 +47,8 @@ async def receive_order_activity(order_id: str) -> dict:
                 "already_processed": True,
             }
 
-        # Create order record
-        order = Order(
-            id=order_id,
-            status="received",
-            customer_name="John Doe",
-            customer_email="john@example.com",
-            total_amount=99.99,
-            items=[{"sku": "ABC123", "qty": 1, "price": 99.99}],
-            shipping_address={
-                "street": "123 Main St",
-                "city": "Anytown",
-                "state": "CA",
-            },
-        )
-        db.add(order)
-        # Log event
-        event = Event(
-            order_id=order_id,
-            event_type="order_received",
-            event_data={"status": "created"},
-        )
-        db.add(event)
-
-        db.commit()
+        # Call the required function stub
+        order = await order_received(order_id, db)
 
         print(f"✅ Order {order_id} created in database")
         return {"order_id": order_id, "status": "received", "items": order.items}
@@ -116,53 +82,14 @@ async def charge_payment_activity(payment_id: str, order_id: str) -> dict:
                 "already_processed": True,
             }
 
-        # VALIDATION: Check if order exists and is in correct state
-        order = db.query(Order).filter(Order.id == order_id).first()
-        if not order:
-            raise ValueError(f"Order {order_id} not found")
-
-        if order.status != "validated":
-            raise ValueError(
-                f"Order {order_id} is in {order.status} state, cannot process payment"
-            )
-
-        # Create payment record
-        payment = Payment(
-            id=payment_id,
-            order_id=order_id,
-            amount=99.99,
-            status="completed",
-            payment_method="credit_card",
-            transaction_id=f"txn-{uuid.uuid4()}",
-        )
-        db.add(payment)
-
-        # Update order status
-        order = db.query(Order).filter(Order.id == order_id).first()
-
-        if order:
-            order.status = "paid"
-            db.commit()
-
-        # Log the event
-        event = Event(
-            order_id=order_id,
-            event_type="payment_charged",
-            event_data={
-                "payment_id": payment_id,
-                "status": "completed",
-                "transaction_id": payment.transaction_id,
-            },
-        )
-        db.add(event)
-        db.commit()
+        result = await payment_charged(order_id=order_id, payment_id=payment_id, db=db)
 
         print(f"✅ Payment {payment_id} processed for order {order_id}")
         return {
             "payment_id": payment_id,
-            "status": "completed",
+            "status": result["status"],
             "order_id": order_id,
-            "transaction_id": payment.transaction_id,
+            "transaction_id": result["transaction_id"],
         }
 
     except Exception as e:
@@ -182,22 +109,7 @@ async def start_shipping_activity(order_id: str) -> dict:
 
     try:
         # Update order status to shipping
-        order = db.query(Order).filter(Order.id == order_id).first()
-        if order:
-            order.status = "shipping"
-            # db.add(order)
-            db.commit()
-
-        # Create shipping event
-        event = Event(
-            order_id=order_id,
-            event_type="shipping_started",
-            event_data={"status": "shipping_initiated"},
-        )
-        db.add(event)
-
-        db.commit()
-
+        await order_shipped(order_id, db)
         print(f"✅ Shipping started for order {order_id}")
         return {
             "order_id": order_id,

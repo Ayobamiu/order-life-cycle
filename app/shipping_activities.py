@@ -1,6 +1,5 @@
 from temporalio import activity
-from database import get_db
-from models import Order, Event
+from function_stubs import carrier_dispatched, package_prepared
 import uuid
 from datetime import datetime
 
@@ -24,13 +23,14 @@ async def pick_items_activity(order_id: str, items: list) -> dict:
 async def package_items_activity(order_id: str, pick_result: dict) -> dict:
     """Package picked items"""
     print(f"📦 Packaging items for order {order_id}")
-    print("⏳ Simulating packaging process...")
+    stub_result = await package_prepared({"order_id": order_id})
     print(f"✅ Items packaged for order {order_id}")
     return {
         "package_weight": 2.5,
         "package_dimensions": "12x8x6 inches",
         "packaged_at": datetime.utcnow().isoformat(),
         "packaging_materials": ["box", "bubble_wrap", "tape"],
+        "stub_result": stub_result,
     }
 
 
@@ -84,8 +84,7 @@ async def confirm_delivery_activity(order_id: str, tracking_result: dict) -> dic
     """Confirm delivery of shipment"""
     print(f"✅ Confirming delivery for order {order_id}")
 
-    # Simulate delivery confirmation
-    print("⏳ Simulating delivery confirmation...")
+    stub_result = await carrier_dispatched({"order_id": order_id})
 
     delivery_date = datetime.utcnow()
 
@@ -95,4 +94,5 @@ async def confirm_delivery_activity(order_id: str, tracking_result: dict) -> dic
         "delivery_status": "delivered",
         "signature_required": False,
         "delivery_notes": "Left at front door",
+        "stub_result": stub_result,
     }

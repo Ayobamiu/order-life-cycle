@@ -10,10 +10,10 @@ from activities import (
     charge_payment_activity,
 )
 
-# Constants - INCREASE THESE FOR TESTING SIGNALS
-MANUAL_REVIEW_TIMEOUT = 60  # Increase from 10 to 60 seconds
-PAYMENT_PROCESSING_DELAY = 30  # Add 30 second delay for payment
-SHIPPING_DELAY = 45  # Add 45 second delay for shipping
+
+MANUAL_REVIEW_TIMEOUT = 3
+PAYMENT_PROCESSING_DELAY = 2
+SHIPPING_DELAY = 2
 
 
 @workflow.defn
