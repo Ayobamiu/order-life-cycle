@@ -1,18 +1,19 @@
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 from datetime import timedelta
+from shipping_workflow import ShippingWorkflow
+
 
 from activities import (
     receive_order_activity,
     validate_order_activity,
     charge_payment_activity,
-    start_shipping_activity,
 )
 
 # Constants - INCREASE THESE FOR TESTING SIGNALS
 MANUAL_REVIEW_TIMEOUT = 60  # Increase from 10 to 60 seconds
 PAYMENT_PROCESSING_DELAY = 30  # Add 30 second delay for payment
-SHIPPING_DELAY = 30  # Add 30 second delay for shipping
+SHIPPING_DELAY = 45  # Add 45 second delay for shipping
 
 
 @workflow.defn
@@ -126,12 +127,14 @@ class OrderWorkflow:
                 print(f"❌ Order {order_id} cancelled during shipping delay")
                 return {"status": "cancelled", "reason": "Order cancelled by customer"}
 
-            shipping_result = await workflow.execute_activity(
-                start_shipping_activity,
-                order_id,
-                start_to_close_timeout=timedelta(seconds=30),
-                retry_policy=RetryPolicy(maximum_attempts=2),
+            # Start child shipping workflow
+            shipping_result = await workflow.start_child_workflow(
+                ShippingWorkflow.run,
+                args=[order_id, order_data.get("items", [])],
+                id=f"shipping-{order_id}",
+                task_queue="shipping-task-queue",  # Different task queue for shipping
             )
+            print(f"🚚 Shipping workflow completed for {order_id}: {shipping_result}")
 
             # Final status check
             if self.cancelled:
@@ -139,10 +142,13 @@ class OrderWorkflow:
                 return {"status": "cancelled", "reason": "Order cancelled by customer"}
 
             print(f"🎉 OrderWorkflow completed successfully for {order_id}")
+            # Return only serializable data
             return {
                 "status": "completed",
                 "order_id": order_id,
-                "shipping_result": shipping_result,
+                "shipping_status": shipping_result["status"],
+                "tracking_number": shipping_result["tracking_number"],
+                "carrier": shipping_result["carrier"],
             }
 
         except Exception as e:
