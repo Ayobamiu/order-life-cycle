@@ -6,14 +6,16 @@ from order_workflow import OrderWorkflow
 
 async def main():
     client = await Client.connect("localhost:7233")
-    order_id = f"order-{uuid.uuid4()}"
-    payment_id = f"payment-{uuid.uuid4()}"
-    print(f"🎯 Starting workflow for order: {order_id}")
+    id = uuid.uuid4()
+    order_id = f"order-{id}"
+    payment_id = f"payment-{id}"
+    workflow_id = f"workflow-{id}"
+    print(f"🎯 Starting workflow for order: {workflow_id}")
 
     result = await client.execute_workflow(
         OrderWorkflow.run,
         args=[order_id, payment_id],
-        id=f"workflow-{order_id}",
+        id=workflow_id,
         task_queue="my-task-queue",
     )
     print(f"✅ Workflow completed! Result:, {result}")
