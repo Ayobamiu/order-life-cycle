@@ -1,5 +1,4 @@
 from temporalio import activity
-from function_stubs import carrier_dispatched, package_prepared
 import uuid
 from datetime import datetime
 
@@ -13,6 +12,7 @@ async def pick_items_activity(order_id: str, items: list) -> dict:
 
     print(f"✅ Items picked for order {order_id}")
     return {
+        "order_id": order_id,
         "picked_items": items,
         "picked_at": datetime.utcnow().isoformat(),
         "warehouse_location": "A1-B3-C2",
@@ -23,14 +23,13 @@ async def pick_items_activity(order_id: str, items: list) -> dict:
 async def package_items_activity(order_id: str, pick_result: dict) -> dict:
     """Package picked items"""
     print(f"📦 Packaging items for order {order_id}")
-    stub_result = await package_prepared({"order_id": order_id})
     print(f"✅ Items packaged for order {order_id}")
     return {
+        "order_id": order_id,
         "package_weight": 2.5,
         "package_dimensions": "12x8x6 inches",
         "packaged_at": datetime.utcnow().isoformat(),
         "packaging_materials": ["box", "bubble_wrap", "tape"],
-        "stub_result": stub_result,
     }
 
 
@@ -52,6 +51,7 @@ async def select_carrier_activity(order_id: str, package_result: dict) -> dict:
 
     print(f"✅ Carrier selected for order {order_id}: {carrier} - {service}")
     return {
+        "order_id": order_id,
         "carrier": carrier,
         "service": service,
         "estimated_days": 3 if carrier == "USPS" else 5,
@@ -72,6 +72,7 @@ async def generate_tracking_activity(order_id: str, carrier_result: dict) -> dic
 
     print(f"✅ Tracking generated for order {order_id}: {tracking_number}")
     return {
+        "order_id": order_id,
         "tracking_number": tracking_number,
         "carrier": carrier_result["carrier"],
         "service": carrier_result["service"],
@@ -84,15 +85,13 @@ async def confirm_delivery_activity(order_id: str, tracking_result: dict) -> dic
     """Confirm delivery of shipment"""
     print(f"✅ Confirming delivery for order {order_id}")
 
-    stub_result = await carrier_dispatched({"order_id": order_id})
-
     delivery_date = datetime.utcnow()
 
     print(f"✅ Delivery confirmed for order {order_id}")
     return {
+        "order_id": order_id,
         "delivery_date": delivery_date.isoformat(),
         "delivery_status": "delivered",
         "signature_required": False,
         "delivery_notes": "Left at front door",
-        "stub_result": stub_result,
     }

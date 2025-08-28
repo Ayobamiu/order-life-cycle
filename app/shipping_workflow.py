@@ -1,10 +1,9 @@
 from temporalio import workflow
-from temporalio import activity
 from datetime import timedelta
-import uuid
+
 
 # Import shipping activities (we'll create these next)
-from shipping_activities import (
+from app.shipping_activities import (
     pick_items_activity,
     package_items_activity,
     select_carrier_activity,

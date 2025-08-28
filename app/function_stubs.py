@@ -5,7 +5,7 @@ import uuid
 
 from sqlalchemy.orm import Session
 
-from models import Event, Order, Payment
+from app.models import Event, Order, Payment
 
 
 async def flaky_call() -> None:
@@ -18,7 +18,6 @@ async def flaky_call() -> None:
         await asyncio.sleep(
             300
         )  # Expect the activity layer to time out before this completes
-    # await asyncio.sleep(3)
 
 
 async def order_received(order_id: str, db: Session) -> Dict[str, Any]:
@@ -69,9 +68,6 @@ async def order_validated(order_id: str, db: Session) -> bool:
         print(f"❌ Order {order_id} not found in database")
         return False
 
-    # if hasattr(order, "items"):  # SQLAlchemy Order object
-    #     items = order.items
-    # else:  # Dictionary
     items = order.items
 
     if not items:

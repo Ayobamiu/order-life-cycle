@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 from temporalio.client import Client
-from order_workflow import OrderWorkflow
+from app.order_workflow import OrderWorkflow
 
 
 async def main():

@@ -1,10 +1,10 @@
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 from datetime import timedelta
-from shipping_workflow import ShippingWorkflow
+from app.shipping_workflow import ShippingWorkflow
 
 
-from activities import (
+from app.activities import (
     receive_order_activity,
     validate_order_activity,
     charge_payment_activity,
@@ -128,13 +128,13 @@ class OrderWorkflow:
                 return {"status": "cancelled", "reason": "Order cancelled by customer"}
 
             # Start child shipping workflow
-            shipping_result = await workflow.start_child_workflow(
+            await workflow.start_child_workflow(
                 ShippingWorkflow.run,
                 args=[order_id, order_data.get("items", [])],
                 id=f"shipping-{order_id}",
                 task_queue="shipping-task-queue",  # Different task queue for shipping
             )
-            print(f"🚚 Shipping workflow completed for {order_id}: {shipping_result}")
+            print(f"🚚 Shipping workflow completed for {order_id}")
 
             # Final status check
             if self.cancelled:
@@ -146,9 +146,6 @@ class OrderWorkflow:
             return {
                 "status": "completed",
                 "order_id": order_id,
-                "shipping_status": shipping_result["status"],
-                "tracking_number": shipping_result["tracking_number"],
-                "carrier": shipping_result["carrier"],
             }
 
         except Exception as e:

@@ -1,9 +1,9 @@
+import uuid
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
-import uuid
 from temporalio.client import Client
-from order_workflow import OrderWorkflow
+from app.order_workflow import OrderWorkflow
 
 app = FastAPI(title="Order Lifecycle API", version="1.0.0")
 
@@ -60,7 +60,7 @@ async def start_order_workflow(order_id: str, request: OrderRequest):
         payment_id = f"payment-{uuid.uuid4()}"
 
         # Start the workflow
-        workflow_handle = await temporal_client.start_workflow(
+        await temporal_client.start_workflow(
             OrderWorkflow.run,
             args=[order_id, payment_id],
             id=f"workflow-{order_id}",

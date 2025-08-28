@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     # Use import string for reload to work properly
     uvicorn.run(
-        "api:app",  # Import string: module.file:app_variable
+        "app.api:app",  # Import string: module.file:app_variable
         host="0.0.0.0",
         port=8000,
         reload=True,  # Auto-reload on code changes

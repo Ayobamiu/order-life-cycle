@@ -1,8 +1,8 @@
 import asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
-from shipping_workflow import ShippingWorkflow
-from shipping_activities import (
+from app.shipping_workflow import ShippingWorkflow
+from app.shipping_activities import (
     pick_items_activity,
     package_items_activity,
     select_carrier_activity,

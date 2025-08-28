@@ -1,8 +1,8 @@
 import asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
-from order_workflow import OrderWorkflow
-from activities import (
+from app.order_workflow import OrderWorkflow
+from app.activities import (
     validate_order_activity,
     charge_payment_activity,
     receive_order_activity,

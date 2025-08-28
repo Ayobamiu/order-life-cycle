@@ -1,8 +1,8 @@
 from temporalio import activity
-from database import get_db
-from models import Order, Payment
+from app.database import get_db
+from app.models import Order, Payment
 
-from function_stubs import (
+from app.function_stubs import (
     order_received,
     order_validated,
     payment_charged,
